@@ -5,9 +5,41 @@ var mod = {};
 
 var substVarsRegex = /\$\{[^\s}]+\}/g; // substitute var looks like --> ${something}
 
+var log = function() {
+    //var args = Array.prototype.slice.call(arguments);
+    //args.unshift("WebDeviceSim");
+    if(global.log)
+        log.info.apply(undefined,arguments);
+    else
+        console.log.apply(undefined,arguments);
+};
+
+var log_err = function() {
+    if(global.log)
+        log.error.apply(undefined,arguments);
+    else {
+        var args = Array.prototype.slice.call(arguments);
+        args.unshift("ERROR");
+        console.error.apply(undefined,args);
+    }
+
+};
+
+
+var log_warn = function() {
+    if(global.log)
+        log.warn.apply(undefined,arguments);
+    else {
+        var args = Array.prototype.slice.call(arguments);
+        args.unshift("WARN");
+        console.error.apply(undefined,args);
+    }
+};
+
+
 var getUserHome = function() {
     return process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
-}
+};
 
 
 /**
@@ -32,7 +64,7 @@ mod.resolveVarsPath = function(str,map) {
                     }
                 }
             }
-            log.warn('Unknown substitution variable: ' + match);
+            log_warn('Unknown substitution variable: ' + match);
             return match;
         }
     }
