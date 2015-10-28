@@ -11,7 +11,7 @@ require('devjs-configurator').configure(__dirname)
     log.debug("config:",data);
 });
 
-// specify a module name (instead of using 'name' in devicejs.json in __localdir
+// specify a module name (instead of using 'name' in devicejs.json in __dirname)
 require('devjs-configurator').configure("my_module_name",__dirname)
   .then(function(err,data){
   if(err)
