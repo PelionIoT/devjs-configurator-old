@@ -8,7 +8,10 @@ var CONFIGURATOR_ID = "CONFIGURATOR";
 var log_dbg = function() {
     var args = Array.prototype.slice.call(arguments);
     args.unshift("devjs-configurator");
-    log.debug.apply(undefined,args);
+    if(global.log)
+        log.debug.apply(undefined,args);
+    else
+        console.log.apply(undefined,args);
 // in ES6:
 //    log.debug.call(undefined,"Configurator", ...arguments);
 };
@@ -16,7 +19,11 @@ var log_dbg = function() {
 var log_err = function() {
     var args = Array.prototype.slice.call(arguments);
     args.unshift("devjs-configurator");
-    log.error.apply(undefined,args);
+    if(global.log) {
+        log.error.apply(undefined,args);
+    } else {
+        console.error.apply(undefined,args);
+    }
 // in ES6:
 //    log.error.call(undefined,"Configurator", ...arguments);
 };
@@ -24,7 +31,11 @@ var log_err = function() {
 var log_warn = function() {
     var args = Array.prototype.slice.call(arguments);
     args.unshift("devjs-configurator");
-    log.warn.apply(undefined,args);
+    if(global.log) {
+        log.error.apply(undefined, args);
+    } else {
+        log.warn.apply(undefined,args);
+    }
 // in ES6:
 //    log.error.call(undefined,"Configurator", ...arguments);
 };
@@ -34,7 +45,7 @@ var log_warn = function() {
  * @param localdir
  * @param cb {callback} function(err,data)
  */
-var do_fs_config = function(localdir,cb) {
+var do_fs_config = function(localdir,cb,filename) {
     var json = null;
     var _path = path.join(localdir,"config.json");
     try {
@@ -56,6 +67,24 @@ var do_fs_config = function(localdir,cb) {
         cb(null,{});
     }
 };
+
+var do_fs_jsononly = function(filepath) {
+    var json = null;
+    try {
+        json = fs.readFileSync(filepath, 'utf8');
+    } catch(e) {
+        log_warn("Error reading:",filepath);
+        log_warn("  Details: " + util.inspect(e));
+        return null;
+    }
+    if(json && typeof json == 'string') {
+        return JSON.parse(json);
+    } else {
+        log_err("Failed to parse JSON for",filepath,e);
+        return null;
+    }
+};
+
 
 module.exports = {};
 
@@ -98,15 +127,23 @@ var getConfiguratorConfig = function(modName,trueCB,falseCB) {
     });
 }
 
+
 /**
  *
+ * @param modName* {string} If not provided, will be found by taking 'name' from devicejs.json
  * @param localdir {string} The local directory of the module where a config.json file should be sitting
+ * @param configfilename {string} defaults to 'config.json'
  * @returns {{then: Function}}
  */
-module.exports.configure = function(modName,localdir) {
+module.exports.configure = function(modName,localdir,configfilename) {
     var self = this;
     var invalid = false;
-    if(typeof modName !== 'string' || typeof localdir !== 'string') {
+    if(arguments.length < 2) {
+        localdir = modName;
+        modName = undefined;
+    }
+    if(!configfilename) configfilename = "config.json";
+    if(typeof localdir !== 'string') {
         invalid = true;
     }
     var ret = {
@@ -119,11 +156,20 @@ module.exports.configure = function(modName,localdir) {
         }
     };
     if(!invalid) {
+        if(!modName) {
+            // get modName via devicejs.json
+            var obj = do_fs_jsononly(path.join(localdir,"devicejs.json"));
+            if(!obj || !obj.name) {
+                self.cb("Could not gather module name from devicejs.json");
+                return;
+            }
+            modName = obj.name;
+        }
         setImmediate(function(self){
             getConfiguratorConfig(modName,function(data){
                     if(data == null) {
                         log.warn("No config set in Configurator for",modName,"Trying file.");
-                        do_fs_config(localdir,self.cb);
+                        do_fs_config(localdir,self.cb,configfilename);
                     } else
                         self.cb(null,data);
                 },
@@ -131,7 +177,7 @@ module.exports.configure = function(modName,localdir) {
                     if(err) {
                         log.error("Error in Configurator API:",err);
                     }
-                    do_fs_config(localdir,self.cb);
+                    do_fs_config(localdir,self.cb,configfilename);
                 });
         },this);
     }
