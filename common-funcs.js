@@ -5,7 +5,7 @@ var mod = {};
 
 var substVarsRegex = /\$\{[^\s}]+\}/g; // substitute var looks like --> ${something}
 
-var log = function() {
+var log_info = function() {
     //var args = Array.prototype.slice.call(arguments);
     //args.unshift("WebDeviceSim");
     if(global.log)
