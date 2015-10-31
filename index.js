@@ -117,7 +117,7 @@ var getConfiguratorConfig = function(modName,trueCB,falseCB) {
                 return;
             }
         } else {
-            log.info("No Configurator found. Will use file for config of",modName);
+            log.info("No Configurator found. Will use cache / file for config of",modName);
             // no Configurator running or not responding
             falseCB(undefined);
         }
@@ -126,6 +126,94 @@ var getConfiguratorConfig = function(modName,trueCB,falseCB) {
         falseCB(err);
     });
 }
+
+var addToCache = function(modname,obj) {
+    if(global.__CONFIGURATOR === undefined)
+        global.__CONFIGURATOR = {};
+    global.__CONFIGURATOR[modname] = obj;
+}
+
+
+
+var configurator = function(modName,localdir,configfilename) {
+    var invalid = false;
+    var self = this;
+    var errmsg = null;
+    if(typeof localdir !== 'string') {
+        invalid = true;
+    }
+    this.getThen = function() {
+        var ret = {
+            then: function(cb) {
+                if(typeof cb === 'function')
+                    self.cb = cb;
+                else invalid = true;
+                if(invalid) {
+                    self.cb = function(){ log_err("Configurator INVALID PARAMS"); };
+                }
+            }
+        };
+        return ret;
+    }
+    setImmediate(function(self,_modName){
+        if(!invalid) {
+            if(!_modName) {
+                // get modName via devicejs.json
+                var _path = path.join(localdir,"devicejs.json");
+                var obj = do_fs_jsononly(_path);
+                if(!obj || !obj.name) {
+                    console.log("obj",obj,"self.cb",self.cb);
+                    errmsg = "Could not gather module name from devicejs.json ("+_path+")";
+                } else {
+                    _modName = obj.name;
+                }
+            }
+
+            if(errmsg) {
+                if(self.cb) self.cb(errmsg);
+                else log_err(errmsg);
+                return;
+            }
+
+            getConfiguratorConfig(_modName,function(data){
+                    if(data == null) {
+                        log_warn("No config set in Configurator for",_modName,"Trying cache, then file.");
+                        if(global.__CONFIGURATOR && global.__CONFIGURATOR[_modName]) {
+                            // Necessary? Well, its messy - but yes. Some modules, such as core-lighting, have all kinds of code floating
+                            // about which don't really execute together. So, as long as each user just does a .configure('core-lighting')
+                            // there will be no issues, and no wasted re-reading.
+                            log_dbg("Using cached config for: ",_modName);
+                            self.cb(null,global.__CONFIGURATOR[_modName]);
+                        } else {
+                            do_fs_config(localdir,function(err,data){
+                                addToCache(_modName,data);
+                                self.cb(err,data)
+                            },configfilename);
+                        }
+                    } else {
+                        self.cb(null,data);
+                    }
+                },
+                function(err){
+                    if(err) {
+                        log.error("Error in Configurator API:",err);
+                    }
+                    if(global.__CONFIGURATOR && global.__CONFIGURATOR[_modName]) {
+                        log_dbg("Using cached config for: ",_modName);
+                        self.cb(null,global.__CONFIGURATOR[_modName]);
+                    } else {
+                        do_fs_config(localdir,function(err,data){
+                            addToCache(_modName,data);
+                            self.cb(err,data)
+                        },configfilename);
+                    }
+                });
+
+        }
+    },this,modName);
+}
+
+
 
 
 /**
@@ -136,52 +224,13 @@ var getConfiguratorConfig = function(modName,trueCB,falseCB) {
  * @returns {{then: Function}}
  */
 module.exports.configure = function(modName,localdir,configfilename) {
-    var self = this;
-    var invalid = false;
     if(arguments.length < 2) {
         localdir = modName;
         modName = undefined;
     }
     if(!configfilename) configfilename = "config.json";
-    if(typeof localdir !== 'string') {
-        invalid = true;
-    }
-    var ret = {
-        then: function(cb) {
-            if(typeof cb === 'function')
-                self.cb = cb;
-            if(invalid && self.cb) {
-                self.cb("invalid params");
-            }
-        }
-    };
-    if(!invalid) {
-        if(!modName) {
-            // get modName via devicejs.json
-            var obj = do_fs_jsononly(path.join(localdir,"devicejs.json"));
-            if(!obj || !obj.name) {
-                self.cb("Could not gather module name from devicejs.json");
-                return;
-            }
-            modName = obj.name;
-        }
-        setImmediate(function(self){
-            getConfiguratorConfig(modName,function(data){
-                    if(data == null) {
-                        log.warn("No config set in Configurator for",modName,"Trying file.");
-                        do_fs_config(localdir,self.cb,configfilename);
-                    } else
-                        self.cb(null,data);
-                },
-                function(err){
-                    if(err) {
-                        log.error("Error in Configurator API:",err);
-                    }
-                    do_fs_config(localdir,self.cb,configfilename);
-                });
-        },this);
-    }
-    return ret;
+    var doit = new configurator(modName,localdir,configfilename);
+    return doit.getThen();
 }
 
 
