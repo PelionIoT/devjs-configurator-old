@@ -125,13 +125,13 @@ var getConfiguratorConfig = function(modName,trueCB,falseCB) {
         log.error("devjs-configurator API error",err);
         falseCB(err);
     });
-}
+};
 
 var addToCache = function(modname,obj) {
     if(global.__CONFIGURATOR === undefined)
         global.__CONFIGURATOR = {};
     global.__CONFIGURATOR[modname] = obj;
-}
+};
 
 
 
@@ -154,15 +154,25 @@ var configurator = function(modName,localdir,configfilename) {
             }
         };
         return ret;
-    }
+    };
     setImmediate(function(self,_modName){
+        var do_cb = function() {
+            try {
+                self.cb.apply(undefined,arguments);
+            } catch(e) {
+                log_err("Failure in config callback: ",e);
+                if(e.stack) {
+                    log_err("stack:",e.stack);
+                }
+            }
+        };
         if(!invalid) {
             if(!_modName) {
                 // get modName via devicejs.json
                 var _path = path.join(localdir,"devicejs.json");
                 var obj = do_fs_jsononly(_path);
                 if(!obj || !obj.name) {
-                    console.log("obj",obj,"self.cb",self.cb);
+//                    console.log("obj",obj,"self.cb",self.cb);
                     errmsg = "Could not gather module name from devicejs.json ("+_path+")";
                 } else {
                     _modName = obj.name;
@@ -170,7 +180,7 @@ var configurator = function(modName,localdir,configfilename) {
             }
 
             if(errmsg) {
-                if(self.cb) self.cb(errmsg);
+                if(self.cb) do_cb(errmsg);
                 else log_err(errmsg);
                 return;
             }
@@ -183,15 +193,15 @@ var configurator = function(modName,localdir,configfilename) {
                             // about which don't really execute together. So, as long as each user just does a .configure('core-lighting')
                             // there will be no issues, and no wasted re-reading.
                             log_dbg("Using cached config for: ",_modName);
-                            self.cb(null,global.__CONFIGURATOR[_modName]);
+                            do_cb(null,global.__CONFIGURATOR[_modName]);
                         } else {
                             do_fs_config(localdir,function(err,data){
                                 addToCache(_modName,data);
-                                self.cb(err,data)
+                                do_cb(err,data)
                             },configfilename);
                         }
                     } else {
-                        self.cb(null,data);
+                        do_cb(null,data);
                     }
                 },
                 function(err){
@@ -200,18 +210,18 @@ var configurator = function(modName,localdir,configfilename) {
                     }
                     if(global.__CONFIGURATOR && global.__CONFIGURATOR[_modName]) {
                         log_dbg("Using cached config for: ",_modName);
-                        self.cb(null,global.__CONFIGURATOR[_modName]);
+                        do_cb(null,global.__CONFIGURATOR[_modName]);
                     } else {
                         do_fs_config(localdir,function(err,data){
                             addToCache(_modName,data);
-                            self.cb(err,data)
+                            do_cb(err,data)
                         },configfilename);
                     }
                 });
 
         }
     },this,modName);
-}
+};
 
 
 
@@ -231,7 +241,7 @@ module.exports.configure = function(modName,localdir,configfilename) {
     if(!configfilename) configfilename = "config.json";
     var doit = new configurator(modName,localdir,configfilename);
     return doit.getThen();
-}
+};
 
 
 module.exports.minifyJSONParseAndSubstVars = commonfuncs.minifyJSONParseAndSubstVars;
