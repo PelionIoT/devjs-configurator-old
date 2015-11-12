@@ -47,7 +47,7 @@ var log_warn = function() {
  */
 var do_fs_config = function(localdir,cb,filename) {
     var json = null;
-    var _path = path.join(localdir,"config.json");
+    var _path = path.join(localdir,filename);
     try {
         json = fs.readFileSync(_path, 'utf8');
     } catch(e) {
