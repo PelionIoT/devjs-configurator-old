@@ -134,35 +134,38 @@ var addToCache = function(modname,obj) {
 };
 
 
-
 var configurator = function(modName,localdir,configfilename) {
     var invalid = false;
     var self = this;
+    this._cb = [];
     var errmsg = null;
     if(typeof localdir !== 'string') {
         invalid = true;
     }
     this.getThen = function() {
-        var ret = {
-            then: function(cb) {
-                if(typeof cb === 'function')
-                    self.cb = cb;
+        var ret = {};
+        ret.then = function(cb) {
+                if(typeof cb === 'function') {
+                    self._cb.push(cb);
+                }
                 else invalid = true;
                 if(invalid) {
-                    self.cb = function(){ log_err("Configurator INVALID PARAMS"); };
+                    self._cb.push(function(){ log_err("Configurator INVALID PARAMS"); });
                 }
-            }
+            return this;  // yes, return this 'ret' object from then(), so the then() is chainable.
         };
         return ret;
     };
     setImmediate(function(self,_modName){
         var do_cb = function() {
-            try {
-                self.cb.apply(undefined,arguments);
-            } catch(e) {
-                log_err("Failure in config callback: ",e);
-                if(e.stack) {
-                    log_err("stack:",e.stack);
+            for(var n=0;n<self._cb.length;n++) {    // all callbacks will be called in the same turn of
+                try {                               // node.js event loop
+                    self._cb[n].apply(undefined,arguments);
+                } catch(e) {
+                    log_err("Failure in config callback ["+n+"]: ",e);
+                    if(e.stack) {
+                        log_err("stack:",e.stack);
+                    }
                 }
             }
         };
@@ -180,7 +183,7 @@ var configurator = function(modName,localdir,configfilename) {
             }
 
             if(errmsg) {
-                if(self.cb) do_cb(errmsg);
+                if(self._cb.length > 0) do_cb(errmsg);
                 else log_err(errmsg);
                 return;
             }
