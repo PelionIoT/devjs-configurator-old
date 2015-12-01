@@ -101,30 +101,35 @@ var getConfiguratorConfig = function(modName,trueCB,falseCB) {
         falseCB("No module name provided");
         return;
     }
-    dev$.selectByID(CONFIGURATOR_ID).call('getModuleConfig',modName).then(function(){
-        let existing = arguments[0];
-        if(
-            existing &&
-            existing[CONFIGURATOR_ID] &&
-            existing[CONFIGURATOR_ID].receivedResponse &&
-            existing[CONFIGURATOR_ID].response
-        ) {
-            if(existing[CONFIGURATOR_ID].response.error) {
-                falseCB(existing[CONFIGURATOR_ID].response.error);
-                return;
+    if(dev$ !== undefined) {
+        dev$.selectByID(CONFIGURATOR_ID).call('getModuleConfig',modName).then(function(){
+            let existing = arguments[0];
+            if(
+                existing &&
+                existing[CONFIGURATOR_ID] &&
+                existing[CONFIGURATOR_ID].receivedResponse &&
+                existing[CONFIGURATOR_ID].response
+            ) {
+                if(existing[CONFIGURATOR_ID].response.error) {
+                    falseCB(existing[CONFIGURATOR_ID].response.error);
+                    return;
+                } else {
+                    trueCB(existing[CONFIGURATOR_ID].response.result);
+                    return;
+                }
             } else {
-                trueCB(existing[CONFIGURATOR_ID].response.result);
-                return;
+                log.info("No Configurator found. Will use cache / file for config of",modName);
+                // no Configurator running or not responding
+                falseCB(undefined);
             }
-        } else {
-            log.info("No Configurator found. Will use cache / file for config of",modName);
-            // no Configurator running or not responding
-            falseCB(undefined);
-        }
-    },function(err){
-        log.error("devjs-configurator API error",err);
-        falseCB(err);
-    });
+        },function(err){
+            log.error("devjs-configurator API error",err);
+            falseCB(err);
+        });
+    } else {
+        log.info("No Configurator. Ok.");
+        falseCB(undefined);
+    }
 };
 
 var addToCache = function(modname,obj) {
@@ -209,7 +214,7 @@ var configurator = function(modName,localdir,configfilename) {
                 },
                 function(err){
                     if(err) {
-                        log.error("Error in Configurator API:",err);
+                        log.warn("Error in Configurator API:",err);
                     }
                     if(global.__CONFIGURATOR && global.__CONFIGURATOR[_modName]) {
                         log_dbg("Using cached config for: ",_modName);
