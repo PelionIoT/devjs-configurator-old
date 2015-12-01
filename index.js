@@ -101,7 +101,7 @@ var getConfiguratorConfig = function(modName,trueCB,falseCB) {
         falseCB("No module name provided");
         return;
     }
-    if(dev$ !== undefined) {
+    if(global.dev$ !== undefined) {
         dev$.selectByID(CONFIGURATOR_ID).call('getModuleConfig',modName).then(function(){
             let existing = arguments[0];
             if(
@@ -118,16 +118,16 @@ var getConfiguratorConfig = function(modName,trueCB,falseCB) {
                     return;
                 }
             } else {
-                log.info("No Configurator found. Will use cache / file for config of",modName);
+                log_dbg("No Configurator found. Will use cache / file for config of",modName);
                 // no Configurator running or not responding
                 falseCB(undefined);
             }
         },function(err){
-            log.error("devjs-configurator API error",err);
+            log_err("devjs-configurator API error",err);
             falseCB(err);
         });
     } else {
-        log.info("No Configurator. Ok.");
+        log_dbg("No Configurator. Ok.");
         falseCB(undefined);
     }
 };
@@ -214,7 +214,7 @@ var configurator = function(modName,localdir,configfilename) {
                 },
                 function(err){
                     if(err) {
-                        log.warn("Error in Configurator API:",err);
+                        log_warn("Error in Configurator API:",err);
                     }
                     if(global.__CONFIGURATOR && global.__CONFIGURATOR[_modName]) {
                         log_dbg("Using cached config for: ",_modName);
