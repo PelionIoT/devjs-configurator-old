@@ -255,4 +255,5 @@ module.exports.configure = function(modName,localdir,configfilename) {
 module.exports.minifyJSONParseAndSubstVars = commonfuncs.minifyJSONParseAndSubstVars;
 module.exports.minifyJSONParse = commonfuncs.minifyJSONParse;
 module.exports.resolveVarsPath = commonfuncs.resolveVarsPath;
+module.exports.JSONminify = require('./lib/minify.json.js');
 module.exports.CONFIGURATOR_ID = CONFIGURATOR_ID;
