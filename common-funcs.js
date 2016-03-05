@@ -102,8 +102,12 @@ mod.minifyJSONParseAndSubstVars = function(s,cb, map) {
 
 mod.minifyJSONParse = function(s,cb) {
     var ok = false;
+    var _s = s;
     try {
-        var config = JSON.parse(JSONminify(s));
+        if(util.isBuffer(s)) {
+            _s = s.toString('utf8');
+        }
+        var config = JSON.parse(JSONminify(_s));
         ok = true;
     } catch(e) {
         cb("Error on JSON / vars sub parse: " + util.inspect(e));
