@@ -118,4 +118,8 @@ mod.minifyJSONParse = function(s,cb) {
 
 mod.JSONminify = JSONminify;
 
+mod.log_info = log_info
+mod.log_err = log_err
+mod.log_warn = log_warn
+
 module.exports = mod;
