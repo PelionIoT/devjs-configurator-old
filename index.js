@@ -8,6 +8,24 @@ const common = require('./common-funcs')
 
 const CONFIGURATOR_DEFAULT_PORT = 45367
 
+
+var do_fs_jsononly = function(filepath) {
+    var json = null;
+    try {
+        json = fs.readFileSync(filepath, 'utf8');
+    } catch(e) {
+        log_warn("Error reading:",filepath);
+        log_warn("  Details: " + util.inspect(e));
+        return null;
+    }
+    if(json && typeof json == 'string') {
+        return JSON.parse(json);
+    } else {
+        log_err("Failed to parse JSON for",filepath,e);
+        return null;
+    }
+};
+
 /**
  *
  * @param moduleName* {string} If not provided, will be found by taking 'name' from devicejs.json
@@ -22,10 +40,26 @@ var configurator = function(port) {
     
     return {
         configure: function(moduleName, moduleLocalDirectory, moduleLocalConfigFileName) {
+            if(arguments.length < 2) {
+                moduleLocalDirectory = moduleName;
+                moduleName = undefined;
+            }
+
             if(!moduleLocalConfigFileName) {
                 moduleLocalConfigFileName = 'config.json'
             }
             
+            if(!moduleName) {
+                // get modName via devicejs.json
+                var _path = path.join(moduleLocalDirectory,"devicejs.json");
+                var obj = do_fs_jsononly(_path);
+                if(!obj || !obj.name) {
+                    return Promise.reject("Could not gather module name from devicejs.json ("+_path+")");
+                } else {
+                    moduleName = obj.name;
+                }
+            }
+
             return new Promise(function(resolve, reject) {
                 request.get({
                     url: 'http://127.0.0.1:' + port + '/config/' + moduleName,

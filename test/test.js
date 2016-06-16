@@ -23,7 +23,13 @@ describe('Configurator', function() {
             return configurator.configure('module2', __dirname).should.be.fulfilledWith({ hellooo: 2 })
         }).then(function() {
             return configurator.configure('module3', __dirname, 'badConf.json').should.be.rejected()
-        })
+        }).then(function() {
+            return configurator.setModuleConfig('TestModule', { hellooo: "thereman" })
+        }).then(function() {
+            return configurator.configure(__dirname).should.be.fulfilledWith({ hellooo: 'thereman' }) // picks up the module name from the devicejs.json file ('TestModule')
+        }).then(function() {                                                                          // this is the simplest API for the user and the default in many places
+            return configurator.configure("TestModule-not-there",__dirname,"not-there.json").should.be.rejected()
+        });
     });
 
     it('should work again', function() {
