@@ -1,0 +1,20 @@
+{
+  "name": "TestModule",
+  "version": "0.0.1",
+  "description": "DeviceJS App Server",
+  "author": {
+    "name": "WigWag",
+    "email": "support@wigwag.com"
+  },
+  "website": {
+    "url": "wigwag.com"
+  },
+  "repository": {},
+  "private": true,
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "devicejs": {
+  }
+}
