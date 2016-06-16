@@ -79,12 +79,11 @@ var configurator = function(port) {
                 if(configuration != null) {
                     return configuration
                 }
-                
-                common.log_warn('Unable to retrieve configuration from server for module ' + moduleName + '. Trying to read config from ' + path.resolve(moduleLocalDirectory, moduleLocalConfigFileName))
+                var fpath = path.resolve(moduleLocalDirectory, moduleLocalConfigFileName)
+                common.log_warn('Unable to retrieve configuration from server for module ' + moduleName + '. Trying to read config from ' + fpath);
                 
                 // try to read from file
                 return new Promise(function(resolve, reject) {
-                    var fpath = path.resolve(moduleLocalDirectory, moduleLocalConfigFileName)
                     fs.readFile(fpath, 'utf8', function(error, json) {
                         if(error) {
                             common.log_err('Unable to load configuration from file for module ' + moduleName + ': ' + util.inspect(error))

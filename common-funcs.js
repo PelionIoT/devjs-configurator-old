@@ -9,18 +9,18 @@ var log_info = function() {
     //var args = Array.prototype.slice.call(arguments);
     //args.unshift("WebDeviceSim");
     if(global.log)
-        log.info.apply(undefined,arguments);
+        log.info.apply(log,arguments);
     else
-        console.log.apply(undefined,arguments);
+        console.log.apply(console,arguments);
 };
 
 var log_err = function() {
     if(global.log)
-        log.error.apply(undefined,arguments);
+        log.error.apply(log,arguments);
     else {
         var args = Array.prototype.slice.call(arguments);
         args.unshift("ERROR");
-        console.error.apply(undefined,args);
+        console.error.apply(console,args);
     }
 
 };
@@ -28,11 +28,11 @@ var log_err = function() {
 
 var log_warn = function() {
     if(global.log)
-        log.warn.apply(undefined,arguments);
+        log.warn.apply(log,arguments);
     else {
         var args = Array.prototype.slice.call(arguments);
         args.unshift("WARN");
-        console.error.apply(undefined,args);
+        console.error.apply(console,args);
     }
 };
 
