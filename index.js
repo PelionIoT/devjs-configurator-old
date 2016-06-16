@@ -3,8 +3,8 @@
 const request = require('request')
 const path = require('path')
 const fs = require('fs')
-const JSONminify = require('./lib/minify.json.js')
 const common = require('./common-funcs')
+const util = require('util');
 
 const CONFIGURATOR_DEFAULT_PORT = 45367
 
@@ -84,21 +84,22 @@ var configurator = function(port) {
                 
                 // try to read from file
                 return new Promise(function(resolve, reject) {
-                    fs.readFile(path.resolve(moduleLocalDirectory, moduleLocalConfigFileName), 'utf8', function(error, data) {
+                    var fpath = path.resolve(moduleLocalDirectory, moduleLocalConfigFileName)
+                    fs.readFile(fpath, 'utf8', function(error, json) {
                         if(error) {
-                            common.log_err('Unable to load configuration from file for module ' + moduleName + ': ' + error.message)
-                            
+                            common.log_err('Unable to load configuration from file for module ' + moduleName + ': ' + util.inspect(error))
                             reject(new Error('Unable to load configuration: ' + error.message))
-                        }
-                        else {
-                            try {
-                                resolve(JSON.parse(JSONminify(data)))
-                            }
-                            catch(e) {
-                                common.log_err('Unable to load configuration from file for module ' + moduleName + ': ' + e.message)
-                                
-                                reject(new Error('Unable to load configuration: ' + e.message))
-                            }
+                        } else {
+                            common.minifyJSONParseAndSubstVars(json,function(err,data){
+                                common.log_err('Error parsing config file ["+fpath+"] for module ' + moduleName + ': ' + util.inspect(err))
+                                if(err){
+                                    reject(new Error("Error reading config file: "+util.inspect(err)));
+                                } else {
+                                    resolve(data);
+                                }
+                            },{
+                                thisdir: moduleLocalDirectory
+                            });
                         }
                     })
                 })
@@ -117,9 +118,8 @@ var configurator = function(port) {
                         reject(error)
                     }
                     else if(response.statusCode != 200) {
-                        common.log_err('Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)
-                        
-                        reject(new Error(''))
+                        common.log_err('Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)                        
+                        reject(new Error('HTTP error'+response.statusCode))
                     }
                     else {
                         resolve()

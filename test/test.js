@@ -14,7 +14,7 @@ describe('Configurator', function() {
         }).then(function() {
             return configurator.configure('module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
         }).then(function() {
-            return configurator.configure('module2', __dirname, 'testConf.json').should.be.fulfilledWith({ hi: 'hello' })
+            return configurator.configure('module2', __dirname, 'testConf.json').should.be.fulfilledWith({ hi: 'hello', mydir: __dirname })
         }).then(function() {
             return configurator.configure('module2', __dirname).should.be.fulfilledWith({ theConf: 'hello' })
         }).then(function() {
@@ -41,7 +41,7 @@ describe('Configurator', function() {
         }).then(function() {
             return configurator2.configure('t2_module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
         }).then(function() {
-            return configurator2.configure('t2_module2', __dirname, 'testConf.json').should.be.fulfilledWith({ hi: 'hello' })
+            return configurator2.configure('t2_module2', __dirname, 'testConf.json').should.be.fulfilledWith({ hi: 'hello', mydir: __dirname  })
         }).then(function() {
             return configurator2.configure('t2_module2', __dirname).should.be.fulfilledWith({ theConf: 'hello' })
         }).then(function() {
