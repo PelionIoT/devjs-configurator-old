@@ -3,9 +3,13 @@ const shouldPromised = require('should-promised')
 const configurator = require('../index.js');
 const configurator2 = require('../index.js').instance(10099);
 
+var test_server = null;
+const configurator_server = require('devjs-configurator-server');
+
 describe('Configurator', function() {
     it('should work', function() {
-        return configurator.createServer().then(function() {
+        return configurator_server.createServer().then(function(server) {
+            test_server = server;
             return configurator.setModuleConfiguration('module1', { hello: 2 })
         }).then(function() {
             return configurator.configure('module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
@@ -23,20 +27,23 @@ describe('Configurator', function() {
     });
 
     it('should work again', function() {
-        return configurator2.createServer().then(function() {
-            return configurator2.setModuleConfiguration('module1', { hello: 2 })
+        return configurator_server.shutdownServer(test_server).then(function(server){
+            test_server = server;
+            return configurator_server.createServer(10099);    
+        }).then(function(){
+            return configurator2.setModuleConfiguration('t2_module1', { hello: 2 })
         }).then(function() {
-            return configurator2.configure('module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
+            return configurator2.configure('t2_module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
         }).then(function() {
-            return configurator2.configure('module2', __dirname, 'testConf.json').should.be.fulfilledWith({ hi: 'hello' })
+            return configurator2.configure('t2_module2', __dirname, 'testConf.json').should.be.fulfilledWith({ hi: 'hello' })
         }).then(function() {
-            return configurator2.configure('module2', __dirname).should.be.fulfilledWith({ theConf: 'hello' })
+            return configurator2.configure('t2_module2', __dirname).should.be.fulfilledWith({ theConf: 'hello' })
         }).then(function() {
-            return configurator2.setModuleConfiguration('module2', { hellooo: 2 })
+            return configurator2.setModuleConfiguration('t2_module2', { hellooo: 2 })
         }).then(function() {
-            return configurator2.configure('module2', __dirname).should.be.fulfilledWith({ hellooo: 2 })
+            return configurator2.configure('t2_module2', __dirname).should.be.fulfilledWith({ hellooo: 2 })
         }).then(function() {
-            return configurator2.configure('module3', __dirname, 'badConf.json').should.be.rejected()
+            return configurator2.configure('t2_module3', __dirname, 'badConf.json').should.be.rejected()
         })
     });
 

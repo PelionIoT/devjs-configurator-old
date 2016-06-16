@@ -1,8 +1,5 @@
 'use strict'
 
-const http = require('http')
-const express = require('express')
-const bodyParser = require('body-parser')
 const request = require('request')
 const path = require('path')
 const fs = require('fs')
@@ -95,52 +92,17 @@ var configurator = function(port) {
                     }
                 })
             })
-        },
-        createServer: function() {
-            const app = express()
-            const server = http.createServer(app)
-            const configurations = new Map()
-            
-            app.use(bodyParser.json())
-            
-            app.get('/config/:moduleName', function(req, res) {
-                let moduleName = req.params.moduleName
-                
-                if(!configurations.has(moduleName)) {
-                    res.status(404).send()
-                }
-                else {
-                    res.status(200).send(configurations.get(moduleName))
-                }
-            })
-            
-            app.put('/config/:moduleName', function(req, res) {
-                let moduleName = req.params.moduleName
-                let configuration = req.body
-                
-                if(configuration == null || typeof configuration != 'object') {
-                    res.status(400).send()
-                }
-                else {
-                    configurations.set(moduleName, configuration)
-                    
-                    res.status(200).send()
-                }
-            })
-            
-            return new Promise(function(resolve, reject) {
-                server.listen(port, '127.0.0.1', function(error) {
-                    if(error) {
-                        reject(error)
-                    }
-                    else {
-                        resolve(server)
-                    }
-                })
-            })
         }
+        // Server component in [github]/WigWagCo/devjs-configurator-server
     }
 };
 
 module.exports = new configurator();
 module.exports.instance = configurator;
+module.exports.minifyJSONParseAndSubstVars = common.minifyJSONParseAndSubstVars;
+module.exports.minifyJSONParse = common.minifyJSONParse;
+module.exports.resolveVarsPath = common.resolveVarsPath;
+module.exports.JSONminify = require('./lib/minify.json.js');
+module.exports.DEFAULTS = {
+    port: CONFIGURATOR_DEFAULT_PORT
+};
