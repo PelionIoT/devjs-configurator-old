@@ -70,7 +70,7 @@ var configurator = function(port) {
                 })
             })
         },
-        setModuleConfiguration: function(moduleName, configuration) {
+        setModuleConfig: function(moduleName, configuration) {
             return new Promise(function(resolve, reject) {
                 request.put({
                     url: 'http://127.0.0.1:' + port + '/config/' + moduleName,

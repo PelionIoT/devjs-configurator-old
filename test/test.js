@@ -10,7 +10,7 @@ describe('Configurator', function() {
     it('should work', function() {
         return configurator_server.createServer().then(function(server) {
             test_server = server;
-            return configurator.setModuleConfiguration('module1', { hello: 2 })
+            return configurator.setModuleConfig('module1', { hello: 2 })
         }).then(function() {
             return configurator.configure('module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
         }).then(function() {
@@ -31,7 +31,7 @@ describe('Configurator', function() {
             test_server = server;
             return configurator_server.createServer(10099);    
         }).then(function(){
-            return configurator_server.setModuleConfiguration('t2_module1', { hello: 2 })
+            return configurator_server.setModuleConfig('t2_module1', { hello: 2 }) // try the server side version also
         }).then(function() {
             return configurator2.configure('t2_module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
         }).then(function() {
