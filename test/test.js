@@ -18,7 +18,7 @@ describe('Configurator', function() {
         }).then(function() {
             return configurator.configure('module2', __dirname).should.be.fulfilledWith({ theConf: 'hello' })
         }).then(function() {
-            return configurator.setModuleConfiguration('module2', { hellooo: 2 })
+            return configurator.setModuleConfig('module2', { hellooo: 2 })
         }).then(function() {
             return configurator.configure('module2', __dirname).should.be.fulfilledWith({ hellooo: 2 })
         }).then(function() {
@@ -39,7 +39,7 @@ describe('Configurator', function() {
         }).then(function() {
             return configurator2.configure('t2_module2', __dirname).should.be.fulfilledWith({ theConf: 'hello' })
         }).then(function() {
-            return configurator2.setModuleConfiguration('t2_module2', { hellooo: 2 })
+            return configurator2.setModuleConfig('t2_module2', { hellooo: 2 })
         }).then(function() {
             return configurator2.configure('t2_module2', __dirname).should.be.fulfilledWith({ hellooo: 2 })
         }).then(function() {
