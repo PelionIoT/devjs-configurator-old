@@ -4,34 +4,31 @@ deviceJS common module config system
 ```javascript
 // example use
 require('devjs-configurator').configure(__dirname)
-  .then(function(err,data){
-  if(err)
-    log.error(err);
-  else
+  .then(function(data){
     log.debug("config:",data);
+},function(err){
+    log.error(err);
 });
 
 // specify a module name (instead of using 'name' in devicejs.json in __dirname)
 require('devjs-configurator').configure("my_module_name",__dirname)
-  .then(function(err,data){
-  if(err)
-    log.error(err);
-  else
+  .then(function(data){
     log.debug("config:",data);
+},function(err){
+    log.error(err);
 });
 
 // specify the config file also (by default is config.json)
 require('devjs-configurator').configure("my_module_name",__dirname,"myconfig.json")
-  .then(function(err,data){
-  if(err)
-    log.error(err);
-  else
+  .then(function(data){
     log.debug("config:",data);
+},function(err){
+    log.error(err);
 });
 ```
 
 ``configure()``
-always returns a ``thenable`` which always fulfills.
+always returns an ES6 ``Promise`` which fulfills if a config is available, either via file or through the ``devjs-configurator-server``.  A deviceJS API is no longer used for configuration, but instead a local http server (available on loopback only) which is started inside Runner.
 
 ====
 **Parsing**
