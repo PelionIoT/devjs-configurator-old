@@ -18,7 +18,7 @@ const CONFIGURATOR_DEFAULT_PORT = 45367
  * @param moduleLocalConfigFileName {string} defaults to 'config.json'
  * @returns {{then: Function}}
  */
-module.exports = (function(port) {
+var configurator = function(port) {
     if(!port) {
         port = CONFIGURATOR_DEFAULT_PORT
     }
@@ -140,4 +140,7 @@ module.exports = (function(port) {
             })
         }
     }
-})
+};
+
+module.exports = new configurator();
+module.exports.instance = configurator;
