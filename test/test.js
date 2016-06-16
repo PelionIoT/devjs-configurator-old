@@ -31,7 +31,7 @@ describe('Configurator', function() {
             test_server = server;
             return configurator_server.createServer(10099);    
         }).then(function(){
-            return configurator2.setModuleConfiguration('t2_module1', { hello: 2 })
+            return configurator_server.setModuleConfiguration('t2_module1', { hello: 2 })
         }).then(function() {
             return configurator2.configure('t2_module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
         }).then(function() {
