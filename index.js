@@ -77,10 +77,10 @@ var configurator = function(port) {
                 })
             }).then(function(configuration) {
                 if(configuration != null) {
-                    return configuration
+                    return configuration;
                 }
                 var fpath = path.resolve(moduleLocalDirectory, moduleLocalConfigFileName)
-                common.log_warn('devjs-configurator: Unable to retrieve configuration from server for module ' + moduleName + '. Trying to read config from ' + fpath);
+                common.log_warn('devjs-configurator: Unable to retrieve config from server for module ' + moduleName + '. Trying to read config from ' + fpath);
                 
                 // try to read from file
                 return new Promise(function(resolve, reject) {
@@ -90,8 +90,8 @@ var configurator = function(port) {
                             reject(new Error('Unable to load configuration: ' + error.message))
                         } else {
                             common.minifyJSONParseAndSubstVars(json,function(err,data){
-                                common.log_err('devjs-configurator: Error parsing config file ['+fpath+'] for module ' + moduleName + ': ' + util.inspect(err))
                                 if(err){
+                                    common.log_err('devjs-configurator: Error parsing config file ['+fpath+'] for module ' + moduleName + ': ' + util.inspect(err))
                                     reject(new Error("Error reading config file: "+util.inspect(err)));
                                 } else {
                                     resolve(data);
