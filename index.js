@@ -80,17 +80,17 @@ var configurator = function(port) {
                     return configuration
                 }
                 var fpath = path.resolve(moduleLocalDirectory, moduleLocalConfigFileName)
-                common.log_warn('Unable to retrieve configuration from server for module ' + moduleName + '. Trying to read config from ' + fpath);
+                common.log_warn('devjs-configurator: Unable to retrieve configuration from server for module ' + moduleName + '. Trying to read config from ' + fpath);
                 
                 // try to read from file
                 return new Promise(function(resolve, reject) {
                     fs.readFile(fpath, 'utf8', function(error, json) {
                         if(error) {
-                            common.log_err('Unable to load configuration from file for module ' + moduleName + ': ' + util.inspect(error))
+                            common.log_err('devjs-configurator: Unable to load configuration from file for module ' + moduleName + ': ' + util.inspect(error))
                             reject(new Error('Unable to load configuration: ' + error.message))
                         } else {
                             common.minifyJSONParseAndSubstVars(json,function(err,data){
-                                common.log_err('Error parsing config file ["+fpath+"] for module ' + moduleName + ': ' + util.inspect(err))
+                                common.log_err('devjs-configurator: Error parsing config file ['+fpath+'] for module ' + moduleName + ': ' + util.inspect(err))
                                 if(err){
                                     reject(new Error("Error reading config file: "+util.inspect(err)));
                                 } else {
@@ -112,12 +112,12 @@ var configurator = function(port) {
                     json: true
                 }, function(error, response, body) {
                     if(error) {
-                        common.log_err('Unable to set configuration for module ' + moduleName + ': ' + error.message)
+                        common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': ' + error.message)
                         
                         reject(error)
                     }
                     else if(response.statusCode != 200) {
-                        common.log_err('Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)                        
+                        common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)                        
                         reject(new Error('HTTP error'+response.statusCode))
                     }
                     else {
