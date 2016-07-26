@@ -14,14 +14,14 @@ var do_fs_jsononly = function(filepath) {
     try {
         json = fs.readFileSync(filepath, 'utf8');
     } catch(e) {
-        log_warn("Error reading:",filepath);
-        log_warn("  Details: " + util.inspect(e));
+        common.log_warn("Error reading:",filepath);
+        common.log_warn("  Details: " + util.inspect(e));
         return null;
     }
     if(json && typeof json == 'string') {
         return JSON.parse(json);
     } else {
-        log_err("Failed to parse JSON for",filepath,e);
+        common.log_err("Failed to parse JSON for",filepath,e);
         return null;
     }
 };
