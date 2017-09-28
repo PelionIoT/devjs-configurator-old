@@ -59,22 +59,83 @@ var configurator = function(port) {
                     moduleName = obj.name;
                 }
             }
+            var conf_name = "default";
+            if(global.MAESTRO_CONFIG_NAMES && global.MAESTRO_CONFIG_NAMES[moduleName]) {
+                conf_name = global.MAESTRO_CONFIG_NAMES[moduleName];
+            } else {
+                console.log("No config name provided for",moduleName,"so using 'default'");
+            }
+
+            // return new Promise(function(resolve, reject) {
+            //     request.get({
+            //         url: 'http://127.0.0.1:' + port + '/config/' + moduleName,
+            //         json: true
+            //     }, function(error, response, body) {
+            //         if(error) {
+            //             resolve(null)
+            //         }
+            //         else if(response.statusCode != 200) {
+            //             resolve(null)
+            //         }
+            //         else {
+            //             resolve(body)
+            //         }
+            //     })
+            // }).then(function(configuration) {
+            //     if(configuration != null) {
+            //         return configuration;
+            //     }
+            //     var fpath = path.resolve(moduleLocalDirectory, moduleLocalConfigFileName)
+            //     common.log_warn('devjs-configurator: Unable to retrieve config from server for module ' + moduleName + '. Trying to read config from ' + fpath);
+                
+            //     // try to read from file
+            //     return new Promise(function(resolve, reject) {
+            //         fs.readFile(fpath, 'utf8', function(error, json) {
+            //             if(error) {
+            //                 common.log_err('devjs-configurator: Unable to load configuration from file for module ' + moduleName + ': ' + util.inspect(error))
+            //                 reject(new Error('Unable to load configuration: ' + error.message))
+            //             } else {
+            //                 common.minifyJSONParseAndSubstVars(json,function(err,data){
+            //                     if(err){
+            //                         common.log_err('devjs-configurator: Error parsing config file ['+fpath+'] for module ' + moduleName + ': ' + util.inspect(err))
+            //                         reject(new Error("Error reading config file: "+util.inspect(err)));
+            //                     } else {
+            //                         resolve(data);
+            //                     }
+            //                 },{
+            //                     thisdir: moduleLocalDirectory
+            //                 });
+            //             }
+            //         })
+            //     })
+            // })
 
             return new Promise(function(resolve, reject) {
-                request.get({
-                    url: 'http://127.0.0.1:' + port + '/config/' + moduleName,
-                    json: true
-                }, function(error, response, body) {
-                    if(error) {
-                        resolve(null)
-                    }
-                    else if(response.statusCode != 200) {
-                        resolve(null)
-                    }
-                    else {
-                        resolve(body)
-                    }
-                })
+
+                if (global.MAESTRO_UNIX_SOCKET) {
+                    var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + job + '/' + conf_name;
+
+                    request.get({
+                        url: 'http://127.0.0.1:' + port + '/config/' + moduleName,
+                        json: true
+                    }, function(error, response, body) {
+                        if(error) {
+                            console.log("devjs-configurator - looks like no response from maestro. Doing fallback.",error)
+                            resolve(null)
+                        }
+                        else if(response.statusCode != 200) {
+                            console.error("Bad response. maybe problem with maestro or path?",response.statusCode,"path was:",localUrl)
+                            resolve(null)
+                        }
+                        else {
+                            resolve(body)
+                        }
+                    })
+
+                } else {
+                    console.log("No MAESTRO_UNIX_SOCKET defined - not ran with maestroRunner or problem with config.")
+                    resolve(null)
+                }
             }).then(function(configuration) {
                 if(configuration != null) {
                     return configuration;
@@ -103,29 +164,63 @@ var configurator = function(port) {
                     })
                 })
             })
+
+
+
         },
+        // setModuleConfig: function(moduleName, configuration) {
+        //     return new Promise(function(resolve, reject) {
+        //         request.put({
+        //             url: 'http://127.0.0.1:' + port + '/config/' + moduleName,
+        //             body: configuration,
+        //             json: true
+        //         }, function(error, response, body) {
+        //             if(error) {
+        //                 common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': ' + error.message)
+                        
+        //                 reject(error)
+        //             }
+        //             else if(response.statusCode != 200) {
+        //                 common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)                        
+        //                 reject(new Error('HTTP error'+response.statusCode))
+        //             }
+        //             else {
+        //                 resolve()
+        //             }
+        //         })
+        //     })
+        // }
         setModuleConfig: function(moduleName, configuration) {
             return new Promise(function(resolve, reject) {
-                request.put({
-                    url: 'http://127.0.0.1:' + port + '/config/' + moduleName,
-                    body: configuration,
-                    json: true
-                }, function(error, response, body) {
-                    if(error) {
-                        common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': ' + error.message)
-                        
-                        reject(error)
-                    }
-                    else if(response.statusCode != 200) {
-                        common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)                        
-                        reject(new Error('HTTP error'+response.statusCode))
-                    }
-                    else {
-                        resolve()
-                    }
-                })
+                var conf_name = 'default';
+                if (global.MAESTRO_UNIX_SOCKET) {
+                    var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + job + '/' + conf_name;
+
+                    request.post({
+                        url: localUrl,
+                        body: configuration,
+                        json: true
+                    }, function(error, response, body) {
+                        if(error) {
+                            common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': ' + error.message)
+                            
+                            reject(error)
+                        }
+                        else if(response.statusCode != 200) {
+                            common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)                        
+                            reject(new Error('HTTP error'+response.statusCode))
+                        }
+                        else {
+                            resolve()
+                        }
+                    })
+                } else {
+                    console.error("No MAESTRO_UNIX_SOCKET defined - can't setModuleConfig.")
+                    resolve(null)                    
+                }
             })
         }
+
         // Server component in [github]/WigWagCo/devjs-configurator-server
     }
 };

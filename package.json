@@ -8,15 +8,17 @@
   },
   "author": "Ed Hemphill <npm@wigwag.com> (http://www.wigwag.com/)",
   "license": "MIT",
-  "engines" : { "node" : ">=0.12" },
+  "engines": {
+    "node": ">=0.12"
+  },
   "dependencies": {
-    "request": "2.60.0"
+    "request": "^2.83.0"
   },
   "devDependencies": {
     "mocha": "2.3.0",
     "expect.js": "0.3.1",
     "should": "7.1.0",
     "should-promised": "0.3.1",
-    "devjs-configurator-server":"https://github.com/WigWagCo/devjs-configurator-server"
+    "devjs-configurator-server": "https://github.com/WigWagCo/devjs-configurator-server"
   }
 }
