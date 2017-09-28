@@ -9,7 +9,7 @@ var log_info = function() {
     //var args = Array.prototype.slice.call(arguments);
     //args.unshift("WebDeviceSim");
     if(global.log)
-        log.info.apply(log,arguments);
+        log.debug.apply(log,arguments);
     else
         console.log.apply(console,arguments);
 };

@@ -40,6 +40,7 @@ var configurator = function(port) {
     
     return {
         configure: function(moduleName, moduleLocalDirectory, moduleLocalConfigFileName) {
+
             if(arguments.length < 2) {
                 moduleLocalDirectory = moduleName;
                 moduleName = undefined;
@@ -48,8 +49,11 @@ var configurator = function(port) {
             if(!moduleLocalConfigFileName) {
                 moduleLocalConfigFileName = 'config.json'
             }
+
+	    common.log_info("IN .configure()...",moduleName,moduleLocalDirectory,moduleLocalConfigFileName);
             
             if(!moduleName) {
+		common.log_info("Looking at devicejs.json")
                 // get modName via devicejs.json
                 var _path = path.join(moduleLocalDirectory,"devicejs.json");
                 var obj = do_fs_jsononly(_path);
@@ -57,13 +61,14 @@ var configurator = function(port) {
                     return Promise.reject("Could not gather module name from devicejs.json ("+_path+")");
                 } else {
                     moduleName = obj.name;
+		    common.log_info("moduleName is '"+moduleName+"'");
                 }
             }
             var conf_name = "default";
             if(global.MAESTRO_CONFIG_NAMES && global.MAESTRO_CONFIG_NAMES[moduleName]) {
                 conf_name = global.MAESTRO_CONFIG_NAMES[moduleName];
             } else {
-                console.log("No config name provided for",moduleName,"so using 'default'");
+                common.log_info("No config name provided for",moduleName,"so using 'default'");
             }
 
             // return new Promise(function(resolve, reject) {
@@ -111,29 +116,64 @@ var configurator = function(port) {
             // })
 
             return new Promise(function(resolve, reject) {
-
+		// How to sniff Unix socket:
+		// socat -t100 -v UNIX-LISTEN:/tmp/maestroapi2.sock,mode=777,reuseaddr,fork UNIX-CONNECT:/tmp/maestroapi.sock
+		// make /tmp/maestroapi2.sock go to /tmp/maestroapi.sock - but dump all output which comes through
+		
                 if (global.MAESTRO_UNIX_SOCKET) {
-                    var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + job + '/' + conf_name;
+//		    MAESTRO_UNIX_SOCKET = '/tmp/maestroapi2.sock'; // HACK - test - remove me
+                    var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + moduleName + '/' + conf_name;
 
+		    common.log_info("Using get config URL:",localUrl);
+		    
                     request.get({
-                        url: 'http://127.0.0.1:' + port + '/config/' + moduleName,
-                        json: true
+                        url: localUrl,
+                        json: true,
+			headers: {
+			    "Host":"127.0.0.1",
+			    "Accept":"application/json",
+			    "Connection":"close"
+			}
                     }, function(error, response, body) {
                         if(error) {
-                            console.log("devjs-configurator - looks like no response from maestro. Doing fallback.",error)
-                            resolve(null)
+                            console.log("devjs-configurator - looks like no response from maestro. Doing fallback.",error);
+                            resolve(null); // move along to file method
                         }
-                        else if(response.statusCode != 200) {
-                            console.error("Bad response. maybe problem with maestro or path?",response.statusCode,"path was:",localUrl)
-                            resolve(null)
+                        else if(response.statusCode != 200) {			    
+                            console.error("Bad response. maybe problem with maestro or path?",response.statusCode,"path was:",localUrl);
+                            resolve(null); // move along to file method
                         }
                         else {
-                            resolve(body)
+			    // Direct response from API is this:
+			    // { configs:
+			    //   [ { name: 'default',
+			    // 	  job: 'maestro-runner-testmodule',
+			    // 	  data: '{ "specialsauce" : "chipotle mayonnaise" }   \n',
+			    // 	  encoding: 'utf8',
+			    // 	  files: null,
+			    // 	  mod_time: '' } ] }
+			    if(typeof body === 'object' && body.configs && util.isArray(body.configs) && body.configs.length > 0
+			       && typeof body.configs[0].data === 'string') {
+				common.minifyJSONParseAndSubstVars(body.configs[0].data,function(err,data){
+                                    if(err){
+					common.log_err('devjs-configurator: Error parsing config .data JSON for module ' + moduleName + ': ' + util.inspect(err))
+					resolve(null);
+//					reject(new Error("Error reading config file: "+util.inspect(err)));
+                                    } else {
+					resolve(data);
+                                    }
+				},{
+                                    thisdir: moduleLocalDirectory
+				});				
+			    } else {
+				console.error("devjs-configurator got response for",moduleName,":",conf_name," but is not properly formed:",body);
+				resolve(body);
+			    }
                         }
                     })
 
                 } else {
-                    console.log("No MAESTRO_UNIX_SOCKET defined - not ran with maestroRunner or problem with config.")
+                    common.log_warn("No MAESTRO_UNIX_SOCKET defined - not ran with maestroRunner or problem with config.")
                     resolve(null)
                 }
             }).then(function(configuration) {
