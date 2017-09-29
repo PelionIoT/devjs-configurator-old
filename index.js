@@ -129,11 +129,11 @@ var configurator = function(port) {
                     request.get({
                         url: localUrl,
                         json: true,
-			headers: {
-			    "Host":"127.0.0.1",
-			    "Accept":"application/json",
-			    "Connection":"close"
-			}
+                        headers: {
+                            "Host":"127.0.0.1",
+                            "Accept":"application/json",
+                            "Connection":"close"
+                        }
                     }, function(error, response, body) {
                         if(error) {
                             console.log("devjs-configurator - looks like no response from maestro. Doing fallback.",error);
@@ -236,22 +236,22 @@ var configurator = function(port) {
                 if (global.MAESTRO_UNIX_SOCKET) {
                     var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + moduleName + '/' + conf_name;
 
-		    var configwrapper = {
-			name: conf_name,
-			job: moduleName,
-			data: JSON.stringify(configuration),
-			encoding: 'utf8'
-		    };
-		    
+        		    var configwrapper = {
+                        name: conf_name,
+                        job: moduleName,
+                        data: JSON.stringify(configuration),
+                        encoding: 'utf8'
+                    };
+  
                     request.post({
                         url: localUrl,
                         body: configwrapper,
                         json: true,
-			headers: {
-			    "Host":"127.0.0.1",
-			    "Accept":"application/json"
-//			    "Connection":"close"
-			}			
+                        headers: {
+                            "Host":"127.0.0.1",
+                            "Accept":"application/json"
+                            // "Connection":"close"
+                        }
                     }, function(error, response, body) {
                         if(error) {
                             common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': ' + error.message)
