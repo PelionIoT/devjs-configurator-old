@@ -234,21 +234,33 @@ var configurator = function(port) {
             return new Promise(function(resolve, reject) {
                 var conf_name = 'default';
                 if (global.MAESTRO_UNIX_SOCKET) {
-                    var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + job + '/' + conf_name;
+                    var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + moduleName + '/' + conf_name;
 
+		    var configwrapper = {
+			name: conf_name,
+			job: moduleName,
+			data: JSON.stringify(configuration),
+			encoding: 'utf8'
+		    };
+		    
                     request.post({
                         url: localUrl,
-                        body: configuration,
-                        json: true
+                        body: configwrapper,
+                        json: true,
+			headers: {
+			    "Host":"127.0.0.1",
+			    "Accept":"application/json"
+//			    "Connection":"close"
+			}			
                     }, function(error, response, body) {
                         if(error) {
                             common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': ' + error.message)
                             
                             reject(error)
                         }
-                        else if(response.statusCode != 200) {
+                        else if(response.statusCode != 201 && response.statusCode != 202) {
                             common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)                        
-                            reject(new Error('HTTP error'+response.statusCode))
+                            reject(new Error('HTTP error '+ response.statusCode))
                         }
                         else {
                             resolve()

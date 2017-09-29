@@ -6,6 +6,7 @@ const configurator2 = require('../index.js').instance(10099);
 var test_server = null;
 const configurator_server = require('devjs-configurator-server');
 
+global.MAESTRO_UNIX_SOCKET = "/tmp/maestroapi.sock";
 
 describe('Configurator', function() {
     // it('should work', function() {
@@ -56,6 +57,7 @@ describe('Configurator', function() {
     it('should work', function() {
         return configurator.setModuleConfig('module1', { hello: 2 })
         .then(function() {
+	    console.log("setModuleConfig success");
             return configurator.configure('module1', __dirname, 'testConf.json').should.be.fulfilledWith({ hello: 2 })
         }).then(function() {
             return configurator.configure('module2', __dirname, 'testConf.json').should.be.fulfilledWith({ hi: 'hello', mydir: __dirname })
