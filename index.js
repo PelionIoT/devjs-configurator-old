@@ -67,7 +67,7 @@ var configurator = function(port) {
             if(global.MAESTRO_CONFIG_NAMES && global.MAESTRO_CONFIG_NAMES[moduleName]) {
                 conf_name = global.MAESTRO_CONFIG_NAMES[moduleName];
             } else {
-                common.log_info("No config name provided for",moduleName,"so using 'default'");
+                common.log_info("No config name provided for",moduleName,"so using '"+conf_name+"'");
             }
 
             return new Promise(function(resolve, reject) {
