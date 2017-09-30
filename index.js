@@ -40,7 +40,6 @@ var configurator = function(port) {
     
     return {
         configure: function(moduleName, moduleLocalDirectory, moduleLocalConfigFileName) {
-
             if(arguments.length < 2) {
                 moduleLocalDirectory = moduleName;
                 moduleName = undefined;
@@ -50,7 +49,10 @@ var configurator = function(port) {
                 moduleLocalConfigFileName = 'config.json'
             }
 
-	    common.log_info("IN .configure()...",moduleName,moduleLocalDirectory,moduleLocalConfigFileName);
+
+//            return (function(moduleName, moduleLocalDirectory, moduleLocalConfigFileName) {
+	    	    
+	    common.log_info("IN .configure() A2 ...",moduleName,moduleLocalDirectory,moduleLocalConfigFileName);
             
             if(!moduleName) {
 		common.log_info("Looking at devicejs.json")
@@ -206,7 +208,7 @@ var configurator = function(port) {
             })
 
 
-
+//        })(moduleName, moduleLocalDirectory, moduleLocalConfigFileName)
         },
         // setModuleConfig: function(moduleName, configuration) {
         //     return new Promise(function(resolve, reject) {
