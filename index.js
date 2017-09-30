@@ -49,13 +49,10 @@ var configurator = function(port) {
                 moduleLocalConfigFileName = 'config.json'
             }
 
-
-//            return (function(moduleName, moduleLocalDirectory, moduleLocalConfigFileName) {
-	    	    
-	    common.log_info("IN .configure() A2 ...",moduleName,moduleLocalDirectory,moduleLocalConfigFileName);
+            common.log_info("devjs-configurator (maestro variation) .configure()...",moduleName,moduleLocalDirectory,moduleLocalConfigFileName);
             
             if(!moduleName) {
-		common.log_info("Looking at devicejs.json")
+                common.log_info("Looking at devicejs.json")
                 // get modName via devicejs.json
                 var _path = path.join(moduleLocalDirectory,"devicejs.json");
                 var obj = do_fs_jsononly(_path);
@@ -63,7 +60,7 @@ var configurator = function(port) {
                     return Promise.reject("Could not gather module name from devicejs.json ("+_path+")");
                 } else {
                     moduleName = obj.name;
-		    common.log_info("moduleName is '"+moduleName+"'");
+                    common.log_info("moduleName is '"+moduleName+"'");
                 }
             }
             var conf_name = "default";
@@ -73,69 +70,25 @@ var configurator = function(port) {
                 common.log_info("No config name provided for",moduleName,"so using 'default'");
             }
 
-            // return new Promise(function(resolve, reject) {
-            //     request.get({
-            //         url: 'http://127.0.0.1:' + port + '/config/' + moduleName,
-            //         json: true
-            //     }, function(error, response, body) {
-            //         if(error) {
-            //             resolve(null)
-            //         }
-            //         else if(response.statusCode != 200) {
-            //             resolve(null)
-            //         }
-            //         else {
-            //             resolve(body)
-            //         }
-            //     })
-            // }).then(function(configuration) {
-            //     if(configuration != null) {
-            //         return configuration;
-            //     }
-            //     var fpath = path.resolve(moduleLocalDirectory, moduleLocalConfigFileName)
-            //     common.log_warn('devjs-configurator: Unable to retrieve config from server for module ' + moduleName + '. Trying to read config from ' + fpath);
-                
-            //     // try to read from file
-            //     return new Promise(function(resolve, reject) {
-            //         fs.readFile(fpath, 'utf8', function(error, json) {
-            //             if(error) {
-            //                 common.log_err('devjs-configurator: Unable to load configuration from file for module ' + moduleName + ': ' + util.inspect(error))
-            //                 reject(new Error('Unable to load configuration: ' + error.message))
-            //             } else {
-            //                 common.minifyJSONParseAndSubstVars(json,function(err,data){
-            //                     if(err){
-            //                         common.log_err('devjs-configurator: Error parsing config file ['+fpath+'] for module ' + moduleName + ': ' + util.inspect(err))
-            //                         reject(new Error("Error reading config file: "+util.inspect(err)));
-            //                     } else {
-            //                         resolve(data);
-            //                     }
-            //                 },{
-            //                     thisdir: moduleLocalDirectory
-            //                 });
-            //             }
-            //         })
-            //     })
-            // })
-
             return new Promise(function(resolve, reject) {
-		// How to sniff Unix socket:
-		// socat -t100 -v UNIX-LISTEN:/tmp/maestroapi2.sock,mode=777,reuseaddr,fork UNIX-CONNECT:/tmp/maestroapi.sock
-		// make /tmp/maestroapi2.sock go to /tmp/maestroapi.sock - but dump all output which comes through
+            // How to sniff Unix socket:
+            // socat -t100 -v UNIX-LISTEN:/tmp/maestroapi2.sock,mode=777,reuseaddr,fork UNIX-CONNECT:/tmp/maestroapi.sock
+            // make /tmp/maestroapi2.sock go to /tmp/maestroapi.sock - but dump all output which comes through
 		
                 if (global.MAESTRO_UNIX_SOCKET) {
 //		    MAESTRO_UNIX_SOCKET = '/tmp/maestroapi2.sock'; // HACK - test - remove me
                     var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + moduleName + '/' + conf_name;
 
-		    common.log_info("Using get config URL:",localUrl);
-		    
+                    common.log_info("Using get config URL:",localUrl);
+
                     request.get({
                         url: localUrl,
                         json: true,
-			headers: {
-			    "Host":"127.0.0.1",
-			    "Accept":"application/json",
-			    "Connection":"close"
-			}
+                        headers: {
+                            "Host":"127.0.0.1",
+                            "Accept":"application/json",
+                            "Connection":"close"
+                        }
                     }, function(error, response, body) {
                         if(error) {
                             console.log("devjs-configurator - looks like no response from maestro. Doing fallback.",error);
@@ -207,53 +160,30 @@ var configurator = function(port) {
                 })
             })
 
-
-//        })(moduleName, moduleLocalDirectory, moduleLocalConfigFileName)
         },
-        // setModuleConfig: function(moduleName, configuration) {
-        //     return new Promise(function(resolve, reject) {
-        //         request.put({
-        //             url: 'http://127.0.0.1:' + port + '/config/' + moduleName,
-        //             body: configuration,
-        //             json: true
-        //         }, function(error, response, body) {
-        //             if(error) {
-        //                 common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': ' + error.message)
-                        
-        //                 reject(error)
-        //             }
-        //             else if(response.statusCode != 200) {
-        //                 common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': HTTP response is ' + response.statusCode)                        
-        //                 reject(new Error('HTTP error'+response.statusCode))
-        //             }
-        //             else {
-        //                 resolve()
-        //             }
-        //         })
-        //     })
-        // }
+
         setModuleConfig: function(moduleName, configuration) {
             return new Promise(function(resolve, reject) {
                 var conf_name = 'default';
                 if (global.MAESTRO_UNIX_SOCKET) {
                     var localUrl = 'http://unix:' + MAESTRO_UNIX_SOCKET + ':/jobConfig/' + moduleName + '/' + conf_name;
 
-		    var configwrapper = {
-			name: conf_name,
-			job: moduleName,
-			data: JSON.stringify(configuration),
-			encoding: 'utf8'
-		    };
-		    
+        		    var configwrapper = {
+                        name: conf_name,
+                        job: moduleName,
+                        data: JSON.stringify(configuration),
+                        encoding: 'utf8'
+                    };
+  
                     request.post({
                         url: localUrl,
                         body: configwrapper,
                         json: true,
-			headers: {
-			    "Host":"127.0.0.1",
-			    "Accept":"application/json"
-//			    "Connection":"close"
-			}			
+                        headers: {
+                            "Host":"127.0.0.1",
+                            "Accept":"application/json"
+                            // "Connection":"close"
+                        }
                     }, function(error, response, body) {
                         if(error) {
                             common.log_err('devjs-configurator: Unable to set configuration for module ' + moduleName + ': ' + error.message)
